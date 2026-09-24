@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## v1.1.0 - 2026-09-24
 
 - The indicator also shows in the Galactic War co-op lobby, after Call for Reinforcements
 

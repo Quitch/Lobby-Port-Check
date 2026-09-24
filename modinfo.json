@@ -4,7 +4,7 @@
   "display_name": "Lobby Port Check DEV",
   "description": "Shows the host of a local lobby whether other players can reach the game server's port from the internet.",
   "author": "Quitch",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "build": "124674",
   "date": "2026-09-24",
   "signature": " ",
