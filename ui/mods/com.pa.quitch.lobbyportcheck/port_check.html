@@ -1,0 +1,19 @@
+<div id="lobby_port_check_row" data-bind="visible: lobbyPortCheck.visible">
+  <div
+    id="lobby_port_check"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+    data-bind="attr: { 'data-state': lobbyPortCheck.state, title: lobbyPortCheck.text }"
+  >
+    <span
+      class="lobby_port_check_glyph"
+      aria-hidden="true"
+      data-bind="text: lobbyPortCheck.glyph"
+    ></span>
+    <span
+      class="lobby_port_check_text"
+      data-bind="text: lobbyPortCheck.text"
+    ></span>
+  </div>
+</div>
