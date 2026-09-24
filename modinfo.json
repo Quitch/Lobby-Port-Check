@@ -8,6 +8,7 @@
   "build": "124674",
   "date": "2026-09-24",
   "signature": " ",
+  "icon": "https://raw.githubusercontent.com/Quitch/Lobby-Port-Check/develop/images/icon.jpg",
   "category": ["ui", "lobby", "classic", "titans"],
   "priority": 100,
   "scenes": {
