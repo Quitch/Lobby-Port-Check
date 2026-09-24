@@ -4,8 +4,8 @@
 
 Lobby Port Check is a client mod for Planetary Annihilation: TITANS. In the `new_game`
 lobby and the Galactic War co-op lobby panel (`gw_play`) it shows the host of a local server
-whether the server's port can be reached from the internet, using `https://ifconfig.co/port/<n>`. There is no build step, only lint and
-tests.
+whether the server's port can be reached from the internet, using `https://ifconfig.co/port/<n>`.
+There is no build step, only lint and tests.
 
 The base game install (a `media` folder under Steam's `.../Planetary Annihilation
 Titans/`) is not part of this repo. If it is set up as an additional workspace root, its
