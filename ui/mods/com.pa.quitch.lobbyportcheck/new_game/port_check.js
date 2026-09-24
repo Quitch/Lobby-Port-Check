@@ -94,7 +94,9 @@
     };
 
     $(".toolbar_user_mgmt").after(
-      loadHtml("coui://ui/mods/com.pa.quitch.lobbyportcheck/port_check.html")
+      loadHtml(
+        "coui://ui/mods/com.pa.quitch.lobbyportcheck/new_game/port_check.html"
+      )
     );
   } catch (e) {
     console.error("Lobby Port Check: " + (e.stack || e.message || e));
