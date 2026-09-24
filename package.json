@@ -1,0 +1,30 @@
+{
+  "name": "lobby-port-check",
+  "private": true,
+  "scripts": {
+    "lint:js": "eslint .",
+    "lint:css": "stylelint \"**/*.css\"",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"!node_modules\"",
+    "format:md": "prettier --write \"**/*.md\" && markdownlint-cli2 --fix \"**/*.md\" \"!node_modules\"",
+    "format:css": "prettier --write \"**/*.css\" && stylelint --fix \"**/*.css\"",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "validate:json": "node -e \"require('fs').readdirSync('.').filter(f=>f.endsWith('.json')).forEach(f=>JSON.parse(require('fs').readFileSync(f,'utf8')))\"",
+    "verify": "npm run lint:js && npm run lint:css && npm run lint:md && npm run format:check && npm run validate:json && npm run test:coverage",
+    "test": "node --test",
+    "pretest:coverage": "node -e \"require('fs').mkdirSync('coverage', { recursive: true })\"",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=\"ui/**/port_check_core.js\" --test-coverage-lines=80 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-es-x": "^9.7.0",
+    "globals": "^17.12.0",
+    "markdownlint-cli2": "^0.23.3",
+    "prettier": "^3.9.8",
+    "stylelint": "^17.15.0",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-no-unsupported-browser-features": "^8.1.2"
+  }
+}
