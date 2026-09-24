@@ -121,11 +121,30 @@ export default defineConfig([
     },
   },
   {
-    // Defined by port_check_core.js, which modinfo.json loads first.
-    files: ["ui/**/port_check.js"],
+    // Defined by port_check_core.js, which modinfo.json loads first. The
+    // function this file defines is called by each scene's port_check.js.
+    files: ["ui/**/shared/port_check.js"],
     languageOptions: {
       globals: {
         lobbyPortCheckCore: "readonly",
+      },
+    },
+    rules: {
+      "no-unused-vars": [
+        "error",
+        {
+          caughtErrors: "none",
+          varsIgnorePattern: "^lobbyPortCheck$",
+        },
+      ],
+    },
+  },
+  {
+    // Defined by shared/port_check.js, which modinfo.json loads first.
+    files: ["ui/**/new_game/port_check.js", "ui/**/gw_play/port_check.js"],
+    languageOptions: {
+      globals: {
+        lobbyPortCheck: "readonly",
       },
     },
   },

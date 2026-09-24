@@ -30,6 +30,22 @@ Three conditions, all required:
 A reconnect reaches `connect_to_game` without `action=start`, which clears the flag. The
 host then sees no indicator until the next start. That fails safe.
 
+### Galactic War co-op
+
+"Call for Reinforcements" (`openToCoop`) starts a local `gw_campaign` server through
+`connect_to_game` with `action=start&local=true`, and so does the host side of the
+Continue War restart (`gw_campaign_restart_loading.js`). A viewer joins without it. So
+condition 1 carries over unchanged. Condition 2 is `isCampaignHost()` and
+`gwCampaignActive()`: the lobby panel (`#gw-campaign-settings`) shows only while the
+session is connected, and a viewer has no host role. Private is `visibilityMode()` of
+`'private'`. The GW lobby has no Friends option.
+
+## Scenes
+
+The two lobbies share everything except four facts, which each scene's `port_check.js`
+passes to `lobbyPortCheck` in `shared/port_check.js`: who the creator is, whether the
+lobby is private, whether to wait for UPnP, and where the indicator goes.
+
 ## States
 
 `port_check_core.js` holds the decisions with no DOM or engine access, so Node can test
@@ -47,7 +63,10 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
   a request and flashed "Private" for a frame.
 - **Debounce:** entering `check` shows `checking` at once and sends the request after 1 s
   of quiet, so quick toggling sends one request. If the lobby is already open when the
-  scene loads, the check runs at once.
+  scene loads, the check also waits 1 s. Scene mods load before
+  `app.registerWithCoherent` defines `model.send_message`, so the UPnP wait cannot run
+  during the load. A GW co-op lobby is nearly always open at load: the `gw_campaign`
+  server starts Public and `visibilityMode` starts `'public'`.
 - **Stale responses:** every change of decision and every request bumps a token. A
   response whose token is no longer current, or that arrives while the decision is not
   `check`, is dropped.
@@ -59,6 +78,10 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
   Measured on 2026-09-24: the server gives up UPnP discovery after 2 s and the mapping
   then takes 45 to 110 ms. The status is ready 1.3 to 1.8 s before the lobby scene
   loads, so the wait costs one round trip in practice. It guards against routers that are slower.
+  `gw_play` does not wait. The `gw_campaign` server has no `upnp_status` handler, and
+  `server_utils.js` drops a message it has no handler for without a response, so the wait
+  would never end. In GW the server starts in `connect_to_game` and the loading scene runs
+  before `gw_play`, so the mapping has normally finished before the check.
 - **Bind:** a local server listens on `127.0.0.1` only while the lobby is Private, and
   binds `0.0.0.0` within about 20 ms of the first non-private settings message. The 1 s
   debounce covers that.
@@ -76,7 +99,7 @@ server's `ServerPort`. A missing or invalid value falls back to 20545.
 
 ## Placement
 
-The indicator has its own right-aligned line, inserted after `.toolbar_user_mgmt` in the
+In `new_game` the indicator has its own right-aligned line, inserted after `.toolbar_user_mgmt` in the
 same `td.controls` cell. It does not go in the toolbar row itself: that row is a fixed
 48px with Add Slot floated left and the Tag picker and privacy toggles floated right,
 and the stock "Tag:" label sits `position: absolute` 40px outside its group. At 1904px
@@ -84,6 +107,11 @@ wide only about 16px is spare, so any indicator there pushes "Tag:" into Add Slo
 less wide windows have less room. The extra line takes its height from the roster below,
 whose cell is `height: 100%`. `loadSceneMods('new_game')` runs before `ko.applyBindings`,
 so the inserted markup is bound with the rest of the page.
+
+In `gw_play` the indicator is a row of the co-op lobby panel, inserted after
+`.gw-settings-title-row` and so before `.gw-settings-privacy-row` ("Open to:"). It copies
+those rows' padding and divider. `gw_play` also loads scene mods before
+`ko.applyBindings`.
 
 ## Accessibility (WCAG 2.2 AAA)
 
@@ -142,7 +170,7 @@ PA's UI is Coherent UI on Chrome 40. Shipped JS is ES5 plus the few later featur
 - `stylelint.config.mjs` and `.browserslistrc` check CSS against `chrome 40`: the
   `stylelint-no-unsupported-browser-features` plugin checks each declaration, and
   hand-written lists cover at-rules, selectors and notation.
-- `port_check.js` and `local_host.js` are engine and DOM wiring that Node cannot load, so
+- The `port_check.js` files and `local_host.js` are engine and DOM wiring that Node cannot load, so
   Sonar excludes them from coverage. The logic they call is in `port_check_core.js`,
   which the tests measure against an 80% line floor.
 
@@ -159,3 +187,7 @@ PA's UI is Coherent UI on Chrome 40. Shipped JS is ES5 plus the few later featur
 7. AI skirmish: starts Private; Public checks as in a multiplayer lobby.
 8. `UPNP` transport with `upnp_status` held at `""`: Checking stays until the status
    arrives or 10 tries pass, then the check runs.
+9. Galactic War, Call for Reinforcements: the panel shows the indicator between Title and
+   Open to:, Checking, then Open, Closed or Unknown. Private, then Public, checks again.
+10. Galactic War with the `UPNP` transport: the check does not stay on Checking.
+11. A viewer who joins the co-op session sees no indicator.
