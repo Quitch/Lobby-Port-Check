@@ -116,6 +116,20 @@ so the inserted markup is bound with the rest of the page.
 The request goes to ifconfig.co, which sees the host's public IP. The mod never shows the
 IP (streamers). The README says so.
 
+## Engine behaviour this relies on
+
+Both checked in game on 2026-09-24 (Coherent UI, build 124674).
+
+- **Cross-origin request.** ifconfig.co sends no `Access-Control-Allow-Origin` header,
+  so a browser that applies CORS to the lobby's `coui://` origin would hide every
+  response and each check would show Unknown. Coherent UI does not: an XHR from the lobby
+  got status 200 with the JSON body, and the indicator went from Checking to Closed. A
+  later engine (the CEF build) can enforce CORS; check step 2 below on it first.
+- **Glyphs.** Verdana has no `✔` or `✖`, and the engine takes them from a fallback font.
+  At 130px in the indicator's font, both measure 132.5px against 130px for a missing
+  glyph (U+E000), and a canvas render in the lobby draws all five glyphs. The words still
+  carry each state if a later engine loses the fallback.
+
 ## Tooling and the Chrome 40 constraint
 
 PA's UI is Coherent UI on Chrome 40. Shipped JS is ES5 plus the few later features Chrome
