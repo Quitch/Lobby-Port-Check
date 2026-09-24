@@ -1,7 +1,7 @@
 {
   "context": "client",
-  "identifier": "com.pa.quitch.lobbyportcheck-dev",
-  "display_name": "Lobby Port Check DEV",
+  "identifier": "com.pa.quitch.lobbyportcheck",
+  "display_name": "Lobby Port Check",
   "description": "Shows the host of a local lobby whether other players can reach the game server's port from the internet.",
   "author": "Quitch",
   "version": "1.0.0",
@@ -9,7 +9,7 @@
   "date": "2026-09-24",
   "signature": " ",
   "forum": "https://steamcommunity.com/app/386070/discussions/0/588438602971768464/",
-  "icon": "https://raw.githubusercontent.com/Quitch/Lobby-Port-Check/develop/images/icon.jpg",
+  "icon": "https://raw.githubusercontent.com/Quitch/Lobby-Port-Check/main/images/icon.jpg",
   "category": ["ui", "lobby", "classic", "titans"],
   "priority": 100,
   "scenes": {
