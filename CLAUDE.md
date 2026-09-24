@@ -3,8 +3,8 @@
 ## What this is
 
 Lobby Port Check is a client mod for Planetary Annihilation: TITANS. In the `new_game`
-lobby it shows the host of a local server whether the server's port can be reached from
-the internet, using `https://ifconfig.co/port/<n>`. There is no build step, only lint and
+lobby and the Galactic War co-op lobby panel (`gw_play`) it shows the host of a local server
+whether the server's port can be reached from the internet, using `https://ifconfig.co/port/<n>`. There is no build step, only lint and
 tests.
 
 The base game install (a `media` folder under Steam's `.../Planetary Annihilation
@@ -18,10 +18,14 @@ and why, the states, the debounce and stale-response rules, placement, and the W
 AAA decisions. Read it before changing anything.
 
 - `local_host.js` (`connect_to_game`) records whether this client started a local server.
-- `port_check_core.js` is pure logic with no DOM, exported to Node for the tests. It must
-  load before `port_check.js`, so it comes first in the `new_game` scene list.
-- `port_check.js` (`new_game`) wires knockout observables, sends the request and inserts
-  `port_check.html` on its own line after `.toolbar_user_mgmt`.
+- `shared/` holds what both lobby scenes load. Each scene list in `modinfo.json` loads
+  `port_check_core.js`, then `shared/port_check.js`, then the scene's own `port_check.js`.
+- `shared/port_check_core.js` is pure logic with no DOM, exported to Node for the tests.
+- `shared/port_check.js` defines `lobbyPortCheck(scene)`, which wires knockout
+  observables, sends the request and inserts `shared/port_check.html`.
+- `new_game/port_check.js` and `gw_play/port_check.js` are adapters: they tell
+  `lobbyPortCheck` who the creator is, whether the lobby is private, whether to wait for
+  UPnP, and where the indicator goes.
 
 ## Constraints
 

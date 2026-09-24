@@ -11,7 +11,7 @@ const path = require("node:path");
 const css = fs.readFileSync(
   path.join(
     __dirname,
-    "../ui/mods/com.pa.quitch.lobbyportcheck/new_game/port_check.css"
+    "../ui/mods/com.pa.quitch.lobbyportcheck/shared/port_check.css"
   ),
   "utf8"
 );

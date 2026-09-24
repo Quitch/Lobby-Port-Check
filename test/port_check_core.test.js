@@ -3,7 +3,7 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
 
-const core = require("../ui/mods/com.pa.quitch.lobbyportcheck/new_game/port_check_core.js");
+const core = require("../ui/mods/com.pa.quitch.lobbyportcheck/shared/port_check_core.js");
 
 describe("resolvePort", () => {
   it("keeps a valid port", () => {
