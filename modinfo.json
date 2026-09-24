@@ -17,9 +17,16 @@
       "coui://ui/mods/com.pa.quitch.lobbyportcheck/connect_to_game/local_host.js"
     ],
     "new_game": [
-      "coui://ui/mods/com.pa.quitch.lobbyportcheck/new_game/port_check_core.js",
+      "coui://ui/mods/com.pa.quitch.lobbyportcheck/shared/port_check_core.js",
+      "coui://ui/mods/com.pa.quitch.lobbyportcheck/shared/port_check.js",
       "coui://ui/mods/com.pa.quitch.lobbyportcheck/new_game/port_check.js",
-      "coui://ui/mods/com.pa.quitch.lobbyportcheck/new_game/port_check.css"
+      "coui://ui/mods/com.pa.quitch.lobbyportcheck/shared/port_check.css"
+    ],
+    "gw_play": [
+      "coui://ui/mods/com.pa.quitch.lobbyportcheck/shared/port_check_core.js",
+      "coui://ui/mods/com.pa.quitch.lobbyportcheck/shared/port_check.js",
+      "coui://ui/mods/com.pa.quitch.lobbyportcheck/gw_play/port_check.js",
+      "coui://ui/mods/com.pa.quitch.lobbyportcheck/shared/port_check.css"
     ]
   },
   "github": "https://github.com/Quitch/Lobby-Port-Check"
