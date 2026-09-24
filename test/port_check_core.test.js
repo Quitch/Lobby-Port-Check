@@ -3,7 +3,7 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
 
-const core = require("../ui/mods/com.pa.quitch.lobbyportcheck/port_check_core.js");
+const core = require("../ui/mods/com.pa.quitch.lobbyportcheck/new_game/port_check_core.js");
 
 describe("resolvePort", () => {
   it("keeps a valid port", () => {
@@ -115,6 +115,26 @@ describe("interpretResponse", () => {
         JSON.stringify(body)
       );
     }
+  });
+});
+
+describe("upnpPending", () => {
+  it("waits while the server has no UPnP result", () => {
+    for (const status of ["", undefined, null]) {
+      assert.equal(core.upnpPending(true, status), true, String(status));
+    }
+  });
+
+  it("waits when the request fails", () => {
+    assert.equal(core.upnpPending(false, "OK"), true);
+  });
+
+  it("stops waiting on success or on a UPnP error", () => {
+    assert.equal(core.upnpPending(true, "OK"), false);
+    assert.equal(
+      core.upnpPending(true, "Error 718: ConflictInMappingEntry"),
+      false
+    );
   });
 });
 

@@ -51,6 +51,20 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
 - **Stale responses:** every change of decision and every request bumps a token. A
   response whose token is no longer current, or that arrives while the decision is not
   `check`, is dropped.
+- **UPnP:** with the `UPNP` transport the server asks the router to forward the port
+  after it starts listening, and `upnp_status` (stock `requestUPNPStatus`) answers `""`
+  until the router replies. The check asks for that status first, once a second, and
+  sends the request when the answer is not empty (`OK` or an error text) or after 10
+  tries. An error does not stop the check: the host can still have a manual forward.
+  Measured on 2026-09-24: the server gives up UPnP discovery after 2 s and the mapping
+  then takes 45 to 110 ms. The status is ready 1.3 to 1.8 s before the lobby scene
+  loads, so the wait costs one round trip in practice. It guards against routers that are slower.
+- **Bind:** a local server listens on `127.0.0.1` only while the lobby is Private, and
+  binds `0.0.0.0` within about 20 ms of the first non-private settings message. The 1 s
+  debounce covers that.
+- **No re-check:** a result stays until the decision changes. A host who fixes the router
+  or firewall with the lobby open sets it to Private and back to re-check, as the README
+  says.
 
 `interpretResponse` returns `open` or `closed` only for HTTP 200 with an object body whose
 `port` equals the port asked about and whose `reachable` is a boolean. Anything else,
@@ -129,3 +143,5 @@ PA's UI is Coherent UI on Chrome 40. Shipped JS is ES5 plus the few later featur
 5. The service unreachable: Unknown.
 6. A joining client sees no indicator, including after a host transfer.
 7. AI skirmish: starts Private; Public checks as in a multiplayer lobby.
+8. `UPNP` transport with `upnp_status` held at `""`: Checking stays until the status
+   arrives or 10 tries pass, then the check runs.
