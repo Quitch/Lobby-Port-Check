@@ -63,6 +63,10 @@ var lobbyPortCheckCore = (function () {
     return body.reachable ? "open" : "closed";
   }
 
+  function upnpPending(success, status) {
+    return !success || status === "" || status === undefined || status === null;
+  }
+
   function label(state) {
     return LABELS[state];
   }
@@ -72,6 +76,7 @@ var lobbyPortCheckCore = (function () {
     resolvePort: resolvePort,
     decideState: decideState,
     interpretResponse: interpretResponse,
+    upnpPending: upnpPending,
     label: label,
   };
 })();

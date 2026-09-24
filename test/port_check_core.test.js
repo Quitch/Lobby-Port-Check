@@ -118,6 +118,26 @@ describe("interpretResponse", () => {
   });
 });
 
+describe("upnpPending", () => {
+  it("waits while the server has no UPnP result", () => {
+    for (const status of ["", undefined, null]) {
+      assert.equal(core.upnpPending(true, status), true, String(status));
+    }
+  });
+
+  it("waits when the request fails", () => {
+    assert.equal(core.upnpPending(false, "OK"), true);
+  });
+
+  it("stops waiting on success or on a UPnP error", () => {
+    assert.equal(core.upnpPending(true, "OK"), false);
+    assert.equal(
+      core.upnpPending(true, "Error 718: ConflictInMappingEntry"),
+      false
+    );
+  });
+});
+
 describe("label", () => {
   const states = ["open", "closed", "unknown", "checking", "private", "steam"];
 

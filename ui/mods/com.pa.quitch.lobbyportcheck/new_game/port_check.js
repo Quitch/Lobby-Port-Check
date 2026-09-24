@@ -34,23 +34,49 @@
       requestToken += 1;
       var token = requestToken;
       var checkedPort = port();
+      var upnpAttempts = 0;
       var settle = function (outcome) {
         if (token === requestToken && settled() === "check") {
           result(outcome);
         }
       };
-      $.ajax({
-        url: "https://ifconfig.co/port/" + checkedPort,
-        dataType: "json",
-        headers: { Accept: "application/json" },
-        timeout: 10000,
-      })
-        .done(function (body, textStatus, jqXHR) {
-          settle(core.interpretResponse(checkedPort, jqXHR.status, body));
+      var send = function () {
+        $.ajax({
+          url: "https://ifconfig.co/port/" + checkedPort,
+          dataType: "json",
+          headers: { Accept: "application/json" },
+          timeout: 10000,
         })
-        .fail(function () {
-          settle("unknown");
+          .done(function (body, textStatus, jqXHR) {
+            settle(core.interpretResponse(checkedPort, jqXHR.status, body));
+          })
+          .fail(function () {
+            settle("unknown");
+          });
+      };
+      // The server maps the port through UPnP after it starts, and answers
+      // upnp_status with "" until the router replies. See design.md.
+      var awaitUpnp = function () {
+        if (token !== requestToken) {
+          return;
+        }
+        model.send_message("upnp_status", {}, function (success, status) {
+          if (token !== requestToken) {
+            return;
+          }
+          upnpAttempts += 1;
+          if (core.upnpPending(success, status) && upnpAttempts < 10) {
+            _.delay(awaitUpnp, 1000);
+            return;
+          }
+          send();
         });
+      };
+      if (api.net.effectiveLocalHostTransport() === "UPNP") {
+        awaitUpnp();
+      } else {
+        send();
+      }
     };
     var scheduleCheck = _.debounce(runCheck, 1000);
 
