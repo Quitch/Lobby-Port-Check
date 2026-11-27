@@ -17,7 +17,8 @@ own `CLAUDE.md` identifies it. Treat it as read-only reference. Never edit anyth
 and why, the states, the debounce and stale-response rules, placement, and the WCAG 2.2
 AAA decisions. Read it before changing anything.
 
-- `local_host.js` (`connect_to_game`) records whether this client started a local server.
+- `local_host.js` (`connect_to_game`) records whether this client started a local server,
+  and the transport it started with.
 - `shared/` holds what both lobby scenes load. Each scene list in `modinfo.json` loads
   `port_check_core.js`, then `shared/port_check.js`, then the scene's own `port_check.js`.
 - `shared/port_check_core.js` is pure logic with no DOM, exported to Node for the tests.

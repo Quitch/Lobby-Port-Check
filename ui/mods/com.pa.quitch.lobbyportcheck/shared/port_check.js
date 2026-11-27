@@ -3,6 +3,9 @@ function lobbyPortCheck(scene) {
   var localHost = ko
     .observable()
     .extend({ session: "lobbyportcheck_local_host" });
+  var transport = ko
+    .observable()
+    .extend({ session: "lobbyportcheck_transport" });
   var lastCheck = ko
     .observable()
     .extend({ session: "lobbyportcheck_last_check" });
@@ -18,7 +21,7 @@ function lobbyPortCheck(scene) {
       localHost: localHost() === true,
       isCreator: scene.isCreator(),
       hidden: scene.hidden(),
-      transport: api.net.effectiveLocalHostTransport(),
+      transport: transport(),
     });
   });
 
@@ -92,7 +95,7 @@ function lobbyPortCheck(scene) {
         send();
       });
     };
-    if (scene.awaitUpnp && api.net.effectiveLocalHostTransport() === "UPNP") {
+    if (scene.awaitUpnp && transport() === "UPNP") {
       awaitUpnp();
     } else {
       send();

@@ -71,6 +71,38 @@ describe("decideState", () => {
   });
 });
 
+describe("startTransport", () => {
+  it("takes local_host_transport from the start params", () => {
+    for (const transport of ["STEAM", "UPNP", "TCP"]) {
+      assert.equal(
+        core.startTransport(
+          JSON.stringify({ local_host_transport: transport }),
+          "UPNP"
+        ),
+        transport
+      );
+    }
+  });
+
+  it("falls back when the params name no transport", () => {
+    for (const raw of [
+      undefined,
+      null,
+      "",
+      "not json",
+      "null",
+      "42",
+      '"STEAM"',
+      "{}",
+      '{"local_host_transport":""}',
+      '{"local_host_transport":null}',
+      '{"other":"STEAM"}',
+    ]) {
+      assert.equal(core.startTransport(raw, "TCP"), "TCP", String(raw));
+    }
+  });
+});
+
 describe("interpretResponse", () => {
   const ok = { ip: "203.0.113.1", port: 20545, reachable: true };
 

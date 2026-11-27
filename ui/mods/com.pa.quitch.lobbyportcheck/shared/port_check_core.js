@@ -45,6 +45,19 @@ var lobbyPortCheckCore = (function () {
     return "check";
   }
 
+  function startTransport(rawParams, fallback) {
+    var params;
+    try {
+      params = JSON.parse(rawParams);
+    } catch (e) {
+      return fallback;
+    }
+    if (params && params.local_host_transport) {
+      return params.local_host_transport;
+    }
+    return fallback;
+  }
+
   function interpretResponse(port, status, body) {
     if (status !== 200) {
       return "unknown";
@@ -92,6 +105,7 @@ var lobbyPortCheckCore = (function () {
     RECHECK_INTERVAL: RECHECK_INTERVAL,
     resolvePort: resolvePort,
     decideState: decideState,
+    startTransport: startTransport,
     interpretResponse: interpretResponse,
     upnpPending: upnpPending,
     planCheck: planCheck,

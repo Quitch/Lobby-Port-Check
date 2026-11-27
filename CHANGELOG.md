@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Checks the port no more than once a minute, as ifconfig.co asks, and shows the last result again within that minute
+- The Galactic War co-op indicator follows the Local Host Networking setting the server started with, after a change on the war map
 
 ## v1.1.0 - 2026-09-24
 
