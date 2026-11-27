@@ -93,14 +93,16 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
   debounce covers that.
 - **Rate limit:** ifconfig.co asks automated clients for no more than one request a
   minute, and may answer 429 or drop requests beyond that. The session key
-  `lobbyportcheck_last_check` holds the port, the time of the last request and its
-  result, so it survives scene changes. `planCheck` decides what a check does: within 60 s
-  of the last request, a check for the same port shows the stored result and sends
-  nothing. With no stored result (the request was still running when the scene changed,
-  or its response was dropped as stale) or for another port, the check shows Checking
-  and sends when the 60 s are up. The time is taken when the request is sent, after any
-  UPnP wait. An `unknown` result is reused like any other, so a 429 does not cause more
-  requests.
+  `lobbyportcheck_last_check` holds the port, the transport, the time of the last request
+  and its result, so it survives scene changes. `planCheck` decides what a check does:
+  within 60 s of the last request, a check for the same port and transport shows the
+  stored result and sends nothing. With no stored result (the request was still running
+  when the scene changed, or its response was dropped as stale), or for another port or
+  transport, the check shows Checking and sends when the 60 s are up. The time is taken
+  when the request is sent, after any UPnP wait. An `unknown` result is reused like any
+  other, so a 429 does not cause more requests. A stored time less than 60 s in the
+  future (the clock was set back) counts as just sent; one further ahead is ignored, so
+  a large clock change cannot block checks.
 - **Re-check:** a result stays until the decision changes or the lobby scene loads again.
   Each load starts at `hidden` (above), so an open lobby checks again: in `new_game` after
   Browse systems and back, and in `gw_play` on each return to the war map. Within a
