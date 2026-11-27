@@ -82,15 +82,22 @@ var lobbyPortCheckCore = (function () {
     return !success || status === "" || status === undefined || status === null;
   }
 
-  function planCheck(last, port, now) {
+  function planCheck(last, port, transport, now) {
     if (!last || typeof last.sentAt !== "number") {
       return { action: "send" };
     }
     var elapsed = now - last.sentAt;
+    if (elapsed < 0 && elapsed > -RECHECK_INTERVAL) {
+      elapsed = 0;
+    }
     if (!(elapsed >= 0 && elapsed < RECHECK_INTERVAL)) {
       return { action: "send" };
     }
-    if (last.port === port && RESULTS.indexOf(last.result) !== -1) {
+    if (
+      last.port === port &&
+      last.transport === transport &&
+      RESULTS.indexOf(last.result) !== -1
+    ) {
       return { action: "reuse", result: last.result };
     }
     return { action: "wait", delay: RECHECK_INTERVAL - elapsed };
