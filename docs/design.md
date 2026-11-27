@@ -62,11 +62,17 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
   settled value differs from the last one acted on. Without that, Friends to Public sent
   a request and flashed "Private" for a frame.
 - **Debounce:** entering `check` shows `checking` at once and sends the request after 1 s
-  of quiet, so quick toggling sends one request. If the lobby is already open when the
-  scene loads, the check also waits 1 s. Scene mods load before
-  `app.registerWithCoherent` defines `model.send_message`, so the UPnP wait cannot run
-  during the load. A GW co-op lobby is nearly always open at load: the `gw_campaign`
-  server starts Public and `visibilityMode` starts `'public'`.
+  of quiet, so quick toggling sends one request.
+- **Scene load:** the indicator starts as `hidden` on every load of either lobby, because
+  the client is not the creator yet. `new_game` learns it from the server's `players`
+  message, and `gw_play` from the co-op connection (`gwCampaignConnected` starts false).
+  A lobby that is already open therefore enters `check` through the debounce, like any
+  other change. The load-time `scheduleCheck()` in `shared/port_check.js` covers a
+  decision of `check` at load, which neither scene produces today. It must stay
+  debounced: scene mods load before `app.registerWithCoherent` defines
+  `model.send_message`, so the UPnP wait cannot run during the load. A GW co-op lobby is
+  nearly always open when the connection arrives: the `gw_campaign` server starts Public
+  and `visibilityMode` starts `'public'`.
 - **Stale responses:** every change of decision and every request bumps a token. A
   response whose token is no longer current, or that arrives while the decision is not
   `check`, is dropped.
@@ -85,9 +91,12 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
 - **Bind:** a local server listens on `127.0.0.1` only while the lobby is Private, and
   binds `0.0.0.0` within about 20 ms of the first non-private settings message. The 1 s
   debounce covers that.
-- **No re-check:** a result stays until the decision changes. A host who fixes the router
-  or firewall with the lobby open sets it to Private and back to re-check, as the README
-  says.
+- **Re-check:** a result stays until the decision changes or the lobby scene loads again.
+  Each load starts at `hidden` (above), so an open lobby checks again: in `new_game` after
+  Browse systems and back, and in `gw_play` on each return to the war map. A host who
+  fixes the router or firewall with the lobby open sets it to Private and back to
+  re-check, as the README says. Nothing holds these checks to ifconfig.co's limit of one
+  automated request per minute (#19).
 
 `interpretResponse` returns `open` or `closed` only for HTTP 200 with an object body whose
 `port` equals the port asked about and whose `reachable` is a boolean. Anything else,
@@ -136,7 +145,9 @@ those rows' padding and divider. `gw_play` also loads scene mods before
 - **3.1.5 reading level:** plain wording, wrapped in `loc("!LOC:…")` so Mod Translations
   can supply translations.
 - **4.1.3 status messages:** `role="status"`, `aria-live="polite"`, `aria-atomic="true"`.
-  Coherent UI has no screen reader, but the semantics carry over to CEF.
+  No screen reader reaches the page on either backend today. Coherent UI has none, and
+  on CEF a probe on 2026-11-23 found that UI Automation sees PA's window with no
+  descendants. The roles keep the indicator ready if PA exposes CEF's accessibility tree.
 - The indicator is not interactive, so target size and focus criteria do not apply.
 
 ## Privacy
@@ -146,22 +157,25 @@ IP (streamers). The README says so.
 
 ## Engine behaviour this relies on
 
-Both checked in game on 2026-09-24 (Coherent UI, build 124674).
+Both checked in game on 2026-09-24 (Coherent UI, build 124674). The cross-origin request
+was checked again on 2026-11-27 (CEF, build 124739).
 
 - **Cross-origin request.** ifconfig.co sends no `Access-Control-Allow-Origin` header,
   so a browser that applies CORS to the lobby's `coui://` origin would hide every
-  response and each check would show Unknown. Coherent UI does not: an XHR from the lobby
-  got status 200 with the JSON body, and the indicator went from Checking to Closed. A
-  later engine (the CEF build) can enforce CORS; check step 2 below on it first.
+  response and each check would show Unknown. Neither backend does. On Coherent UI an XHR
+  from the lobby got status 200 with the JSON body, and the indicator went from Checking
+  to Closed. On CEF the same request from a `coui://ui` page got status 200 with a
+  readable body, and an AI skirmish lobby went from Checking to Closed in 3.1 s.
 - **Glyphs.** Verdana has no `✔` or `✖`, and the engine takes them from a fallback font.
   At 130px in the indicator's font, both measure 132.5px against 130px for a missing
-  glyph (U+E000), and a canvas render in the lobby draws all five glyphs. The words still
-  carry each state if a later engine loses the fallback.
+  glyph (U+E000), and a canvas render in the lobby draws all five glyphs. This is not
+  checked on CEF. The words still carry each state if an engine loses the fallback.
 
 ## Tooling and the Chrome 40 constraint
 
-PA's UI is Coherent UI on Chrome 40. Shipped JS is ES5 plus the few later features Chrome
-40 has.
+PA renders its UI with CEF (Chromium 150) by default since build 124720, but Coherent UI
+on Chrome 40 is still selectable, and a parse error there takes out the whole script. So
+shipped JS is ES5 plus the few later features Chrome 40 has.
 
 - In `eslint.config.mjs`, `ecmaVersion` is a parser setting, not a claim about PA.
   `es-x/restrict-to-es5` bans everything post-ES5, and a whitelist turns back on only
