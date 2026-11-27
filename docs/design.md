@@ -162,8 +162,9 @@ those rows' padding and divider. `gw_play` also loads scene mods before
 
 ## Accessibility (WCAG 2.2 AAA)
 
-- **1.4.1 Use of colour:** each state has its own glyph and its own words. The glyph is
-  `aria-hidden`; the words carry the meaning.
+- **1.4.1 Use of colour:** each state has its own words, and each check result its own
+  glyph, except `ipv6`, which shares Unknown's `?` and colour because neither says
+  anything about the port. The glyph is `aria-hidden`; the words carry the meaning.
 - **1.4.6 / 1.4.11 contrast:** the indicator draws its own solid `#000` background, so its
   contrast does not depend on the lobby art behind it. `test/contrast.test.js` reads
   `port_check.css` and fails below 7:1 for text or 3:1 for the border. Current values:
@@ -251,5 +252,5 @@ shipped JS is ES5 plus the few later features Chrome 40 has.
 13. Galactic War, Local Host Networking changed on the war map without a visit to the
     main menu, then Call for Reinforcements after `gw_play` loads again: the indicator
     follows the new setting, not `server_local_host_transport`.
-14. A response whose `ip` is an IPv6 address: "IPv6 connection: port not checked" in the
-    Unknown colour, reused like any other result within the minute.
+14. A response whose `ip` is an IPv6 address: "IPv6 connection: port 20545 not checked"
+    in the Unknown colour, reused like any other result within the minute.
