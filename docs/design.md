@@ -101,8 +101,9 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
   transport, the check shows Checking and sends when the 60 s are up. The time is taken
   when the request is sent, after any UPnP wait. An `unknown` result is reused like any
   other, so a 429 does not cause more requests. A stored time less than 60 s in the
-  future (the clock was set back) counts as just sent; one further ahead is ignored, so
-  a large clock change cannot block checks.
+  future (the clock was set back) counts as inside the minute: checks reuse its result,
+  or wait, until a minute after that stored time. One further ahead is ignored, so a
+  large clock change cannot block checks.
 - **Re-check:** a result stays until the decision changes or the lobby scene loads again.
   Each load starts at `hidden` (above), so an open lobby checks again: in `new_game` after
   Browse systems and back, and in `gw_play` on each return to the war map. Within a
