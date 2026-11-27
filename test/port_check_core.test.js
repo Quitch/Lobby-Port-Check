@@ -101,6 +101,22 @@ describe("startTransport", () => {
       assert.equal(core.startTransport(raw, "TCP"), "TCP", String(raw));
     }
   });
+
+  it("names the transport the server runs for any other value", () => {
+    for (const transport of ["upnp", "steam", "Tcp", "P2P", true, 1, {}]) {
+      assert.equal(
+        core.startTransport(
+          JSON.stringify({ local_host_transport: transport }),
+          "TCP"
+        ),
+        "UPNP",
+        JSON.stringify(transport)
+      );
+    }
+    for (const fallback of ["upnp", undefined, null, ""]) {
+      assert.equal(core.startTransport("{}", fallback), "UPNP", fallback);
+    }
+  });
 });
 
 describe("interpretResponse", () => {

@@ -45,17 +45,23 @@ var lobbyPortCheckCore = (function () {
     return "check";
   }
 
+  // As stock transportToNetworkFlags: any other value starts the server
+  // with UPnP.
+  function serverTransport(transport) {
+    return transport === "TCP" || transport === "STEAM" ? transport : "UPNP";
+  }
+
   function startTransport(rawParams, fallback) {
     var params;
     try {
       params = JSON.parse(rawParams);
     } catch (e) {
-      return fallback;
+      params = null;
     }
     if (params && params.local_host_transport) {
-      return params.local_host_transport;
+      return serverTransport(params.local_host_transport);
     }
-    return fallback;
+    return serverTransport(fallback);
   }
 
   function interpretResponse(port, status, body) {

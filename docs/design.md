@@ -57,6 +57,8 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
   `connect_to_game`, `local_host.js` records it in the session key
   `lobbyportcheck_transport` the way `api.net.startGame` picks it: `local_host_transport`
   from the JSON in the `params` URL parameter, else `api.net.effectiveLocalHostTransport()`.
+  Any value other than exactly `TCP` or `STEAM` is recorded as `UPNP`, because stock
+  `transportToNetworkFlags` starts the server with UPnP for it.
   The two differ in Galactic War. `gw_play` and `gw_campaign_restart_loading` pass the
   Local Host Networking setting as `gw_play` read it at load, and `gw_play` docks the
   Settings panel, while only `start.js` copies the setting into the session key

@@ -18,9 +18,10 @@ and why, the states, the debounce and stale-response rules, placement, and the W
 AAA decisions. Read it before changing anything.
 
 - `local_host.js` (`connect_to_game`) records whether this client started a local server,
-  and the transport it started with.
-- `shared/` holds what both lobby scenes load. Each scene list in `modinfo.json` loads
-  `port_check_core.js`, then `shared/port_check.js`, then the scene's own `port_check.js`.
+  and the transport it started with. `modinfo.json` loads `port_check_core.js` before it.
+- `shared/` holds what both lobby scenes load. Each lobby scene list in `modinfo.json`
+  loads `port_check_core.js`, then `shared/port_check.js`, then the scene's own
+  `port_check.js`.
 - `shared/port_check_core.js` is pure logic with no DOM, exported to Node for the tests.
 - `shared/port_check.js` defines `lobbyPortCheck(scene)`, which wires knockout
   observables, sends the request and inserts `shared/port_check.html`.
