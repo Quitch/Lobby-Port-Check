@@ -121,6 +121,15 @@ export default defineConfig([
     },
   },
   {
+    // Defined by port_check_core.js, which modinfo.json loads first.
+    files: ["ui/**/connect_to_game/local_host.js"],
+    languageOptions: {
+      globals: {
+        lobbyPortCheckCore: "readonly",
+      },
+    },
+  },
+  {
     // Defined by port_check_core.js, which modinfo.json loads first. The
     // function this file defines is called by each scene's port_check.js.
     files: ["ui/**/shared/port_check.js"],

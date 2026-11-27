@@ -45,6 +45,25 @@ var lobbyPortCheckCore = (function () {
     return "check";
   }
 
+  // As stock transportToNetworkFlags: any other value starts the server
+  // with UPnP.
+  function serverTransport(transport) {
+    return transport === "TCP" || transport === "STEAM" ? transport : "UPNP";
+  }
+
+  function startTransport(rawParams, fallback) {
+    var params;
+    try {
+      params = JSON.parse(rawParams);
+    } catch (e) {
+      params = null;
+    }
+    if (params && params.local_host_transport) {
+      return serverTransport(params.local_host_transport);
+    }
+    return serverTransport(fallback);
+  }
+
   function interpretResponse(port, status, body) {
     if (status !== 200) {
       return "unknown";
@@ -99,6 +118,7 @@ var lobbyPortCheckCore = (function () {
     RECHECK_INTERVAL: RECHECK_INTERVAL,
     resolvePort: resolvePort,
     decideState: decideState,
+    startTransport: startTransport,
     interpretResponse: interpretResponse,
     upnpPending: upnpPending,
     planCheck: planCheck,

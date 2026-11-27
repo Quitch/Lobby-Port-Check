@@ -18,7 +18,7 @@ Three conditions, all required:
    (`server_browser.js`, `helpers.js`), so they cannot answer this. Every start and join
    passes through `connect_to_game`, where `local_host.js` writes the session key
    `lobbyportcheck_local_host` from `action=start&local=true`. It writes on every load,
-   so a later join clears the flag. AI skirmish takes the same route
+   so a later join clears the flag, and the transport with it (see States). AI skirmish takes the same route
    (`start.js` `navToAISkirmish`) and is not special-cased: its lobby starts Private and
    the host can open it to humans.
 2. **This client is the game creator** (`model.isGameCreator`). After a host transfer the
@@ -52,8 +52,23 @@ lobby is private, whether to wait for UPnP, and where the indicator goes.
 it. `decideState` returns `hidden`, `private`, `steam` or `check`, in that order of
 precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
 
-- **STEAM transport** (`api.net.effectiveLocalHostTransport()`): Steam carries the
-  connection, so no port needs to be open, and the mod does not check.
+- **STEAM transport:** Steam carries the connection, so no port needs to be open, and
+  the mod does not check. The transport is the one the server started with. In
+  `connect_to_game`, `local_host.js` records it in the session key
+  `lobbyportcheck_transport` the way `api.net.startGame` picks it: `local_host_transport`
+  from the JSON in the `params` URL parameter, else `api.net.effectiveLocalHostTransport()`.
+  Any value other than exactly `TCP` or `STEAM` is recorded as `UPNP`, because stock
+  `transportToNetworkFlags` starts the server with UPnP for it.
+  The two differ in Galactic War. `gw_play` and `gw_campaign_restart_loading` pass the
+  Local Host Networking setting as `gw_play` read it at load, and `gw_play` docks the
+  Settings panel, while only `start.js` copies the setting into the session key
+  `server_local_host_transport` that `effectiveLocalHostTransport()` reads. A change on
+  the war map therefore reaches the co-op server before it reaches the session key.
+  `effectiveLocalHostTransport()` turns `STEAM` into `UPNP` when `api.steam.hasClient()`
+  is false, but `params` is used as given, and the mod records it unchanged. Measured on
+  2026-11-27 (CEF, build 124739) on a client with no Steam client: a `gw_campaign` server
+  started with `STEAM` ran Steam networking (`--enable-steam-networking`, a Steam game
+  server ID and a Steam P2P listener).
 - **Friends and Public** both decide `check`, so switching between them changes nothing
   and sends no request. Private to either one does.
 - **Transient Private:** stock `setPublicGame` and `setFriendsOnlyGame` clear one flag
@@ -223,3 +238,6 @@ shipped JS is ES5 plus the few later features Chrome 40 has.
 12. Browse systems and back within a minute of the last request: the stored result
     shows with no request. A scene change while a request runs: the next check waits
     until a minute after that request, then sends.
+13. Galactic War, Local Host Networking changed on the war map without a visit to the
+    main menu, then Call for Reinforcements after `gw_play` loads again: the indicator
+    follows the new setting, not `server_local_host_transport`.

@@ -14,6 +14,7 @@
   "priority": 100,
   "scenes": {
     "connect_to_game": [
+      "coui://ui/mods/com.pa.quitch.lobbyportcheck/shared/port_check_core.js",
       "coui://ui/mods/com.pa.quitch.lobbyportcheck/connect_to_game/local_host.js"
     ],
     "new_game": [

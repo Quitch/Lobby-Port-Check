@@ -3,6 +3,9 @@ function lobbyPortCheck(scene) {
   var localHost = ko
     .observable()
     .extend({ session: "lobbyportcheck_local_host" });
+  var transport = ko
+    .observable()
+    .extend({ session: "lobbyportcheck_transport" });
   var lastCheck = ko
     .observable()
     .extend({ session: "lobbyportcheck_last_check" });
@@ -18,7 +21,7 @@ function lobbyPortCheck(scene) {
       localHost: localHost() === true,
       isCreator: scene.isCreator(),
       hidden: scene.hidden(),
-      transport: api.net.effectiveLocalHostTransport(),
+      transport: transport(),
     });
   });
 
@@ -36,7 +39,7 @@ function lobbyPortCheck(scene) {
     requestToken += 1;
     var token = requestToken;
     var checkedPort = port();
-    var checkedTransport = api.net.effectiveLocalHostTransport();
+    var checkedTransport = transport();
     // ifconfig.co asks for no more than one automated request a minute.
     var plan = core.planCheck(
       lastCheck(),
