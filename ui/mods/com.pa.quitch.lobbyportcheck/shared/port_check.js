@@ -39,8 +39,14 @@ function lobbyPortCheck(scene) {
     requestToken += 1;
     var token = requestToken;
     var checkedPort = port();
+    var checkedTransport = transport();
     // ifconfig.co asks for no more than one automated request a minute.
-    var plan = core.planCheck(lastCheck(), checkedPort, _.now());
+    var plan = core.planCheck(
+      lastCheck(),
+      checkedPort,
+      checkedTransport,
+      _.now()
+    );
     if (plan.action === "reuse") {
       result(plan.result);
       return;
@@ -55,15 +61,23 @@ function lobbyPortCheck(scene) {
     }
     var upnpAttempts = 0;
     var sentAt;
+    var record = function (outcome) {
+      lastCheck({
+        port: checkedPort,
+        transport: checkedTransport,
+        sentAt: sentAt,
+        result: outcome,
+      });
+    };
     var settle = function (outcome) {
       if (token === requestToken && settled() === "check") {
-        lastCheck({ port: checkedPort, sentAt: sentAt, result: outcome });
+        record(outcome);
         result(outcome);
       }
     };
     var send = function () {
       sentAt = _.now();
-      lastCheck({ port: checkedPort, sentAt: sentAt, result: null });
+      record(null);
       $.ajax({
         url: "https://ifconfig.co/port/" + checkedPort,
         dataType: "json",
@@ -95,7 +109,7 @@ function lobbyPortCheck(scene) {
         send();
       });
     };
-    if (scene.awaitUpnp && transport() === "UPNP") {
+    if (scene.awaitUpnp && checkedTransport === "UPNP") {
       awaitUpnp();
     } else {
       send();
