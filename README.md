@@ -14,6 +14,7 @@ session (**Call for Reinforcements**) it sits in the lobby panel between **Title
 | ✔ Port 20545 open                                    | Players on the internet can reach your server.                      |
 | ✖ Port 20545 closed: players may not be able to join | Your router or firewall blocks the port. Forward it, or use Steam.  |
 | ? Port 20545 status unknown                          | The check failed. It does not say anything about the port.          |
+| ? IPv6 connection: port 20545 not checked            | The check used IPv6 and cannot test the IPv4 port that players use. |
 | ⋯ Checking port 20545                                | The check is running.                                               |
 | — Private: port not checked                          | Nobody else can join a private lobby, so there is nothing to check. |
 | — Steam networking: no open port needed              | Steam carries the connection, so no port has to be open.            |

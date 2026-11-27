@@ -1,7 +1,7 @@
 var lobbyPortCheckCore = (function () {
   var DEFAULT_PORT = 20545;
   var RECHECK_INTERVAL = 60000;
-  var RESULTS = ["open", "closed", "unknown"];
+  var RESULTS = ["open", "closed", "unknown", "ipv6"];
 
   var LABELS = {
     open: { glyph: "✔", text: "!LOC:Port __port__ open" },
@@ -10,6 +10,10 @@ var lobbyPortCheckCore = (function () {
       text: "!LOC:Port __port__ closed: players may not be able to join",
     },
     unknown: { glyph: "?", text: "!LOC:Port __port__ status unknown" },
+    ipv6: {
+      glyph: "?",
+      text: "!LOC:IPv6 connection: port __port__ not checked",
+    },
     checking: { glyph: "⋯", text: "!LOC:Checking port __port__" },
     private: { glyph: "—", text: "!LOC:Private: port not checked" },
     steam: {
@@ -80,6 +84,9 @@ var lobbyPortCheckCore = (function () {
     }
     if (body.port !== port || typeof body.reachable !== "boolean") {
       return "unknown";
+    }
+    if (typeof body.ip === "string" && body.ip.indexOf(":") !== -1) {
+      return "ipv6";
     }
     return body.reachable ? "open" : "closed";
   }

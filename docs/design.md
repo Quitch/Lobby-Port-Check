@@ -50,7 +50,7 @@ lobby is private, whether to wait for UPnP, and where the indicator goes.
 
 `port_check_core.js` holds the decisions with no DOM or engine access, so Node can test
 it. `decideState` returns `hidden`, `private`, `steam` or `check`, in that order of
-precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
+precedence. `check` resolves to `checking`, then `open`, `closed`, `unknown` or `ipv6`.
 
 - **STEAM transport:** Steam carries the connection, so no port needs to be open, and
   the mod does not check. The transport is the one the server started with. In
@@ -131,6 +131,16 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
 including timeouts (10 s), 429 rate limiting and no network, is `unknown`. An `unknown`
 never claims anything about the port.
 
+A usable body whose `ip` is a string that contains `:` is `ipv6`, whatever `reachable`
+says. ifconfig.co runs echoip, whose `/port/` handler dials the address that sent the
+request, and ifconfig.co has IPv6 addresses, so a host with IPv6 can send the request
+over IPv6. The PA server listens on IPv4 only (one `0.0.0.0` listener while the lobby is
+open, measured 2026-11-27), so a result for an IPv6 address says nothing about the port
+that players reach. A browser request cannot choose IPv4, and ifconfig.co has had no
+IPv4-only hostname since 2018. A body with no `ip`, or a non-string `ip`, is read from
+`reachable` as before. Like `unknown`, `ipv6` claims nothing about the port, but its
+words tell the host that checking again will not help.
+
 The port comes from the session key `gamePort`, which `connect_to_game.js` sets from the
 server's `ServerPort`. A missing or invalid value falls back to 20545.
 
@@ -152,8 +162,9 @@ those rows' padding and divider. `gw_play` also loads scene mods before
 
 ## Accessibility (WCAG 2.2 AAA)
 
-- **1.4.1 Use of colour:** each state has its own glyph and its own words. The glyph is
-  `aria-hidden`; the words carry the meaning.
+- **1.4.1 Use of colour:** each state has its own words, and each check result its own
+  glyph, except `ipv6`, which shares Unknown's `?` and colour because neither says
+  anything about the port. The glyph is `aria-hidden`; the words carry the meaning.
 - **1.4.6 / 1.4.11 contrast:** the indicator draws its own solid `#000` background, so its
   contrast does not depend on the lobby art behind it. `test/contrast.test.js` reads
   `port_check.css` and fails below 7:1 for text or 3:1 for the border. Current values:
@@ -163,7 +174,7 @@ those rows' padding and divider. `gw_play` also loads scene mods before
   | Neutral text | `#e0e0e0` | 15.91:1         |
   | Open         | `#6ee07a` | 12.61:1         |
   | Closed       | `#ff8a80` | 9.20:1          |
-  | Unknown      | `#ffd54f` | 14.88:1         |
+  | Unknown/IPv6 | `#ffd54f` | 14.88:1         |
   | Border       | `#808080` | 5.32:1          |
 
 - **1.4.12 text spacing:** no fixed height; the label does not wrap.
@@ -241,3 +252,5 @@ shipped JS is ES5 plus the few later features Chrome 40 has.
 13. Galactic War, Local Host Networking changed on the war map without a visit to the
     main menu, then Call for Reinforcements after `gw_play` loads again: the indicator
     follows the new setting, not `server_local_host_transport`.
+14. A response whose `ip` is an IPv6 address: "IPv6 connection: port 20545 not checked"
+    in the Unknown colour, reused like any other result within the minute.
