@@ -75,7 +75,7 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
   and `visibilityMode` starts `'public'`.
 - **Stale responses:** every change of decision and every request bumps a token. A
   response whose token is no longer current, or that arrives while the decision is not
-  `check`, is dropped.
+  `check`, is dropped, and is not stored for re-use.
 - **UPnP:** with the `UPNP` transport the server asks the router to forward the port
   after it starts listening, and `upnp_status` (stock `requestUPNPStatus`) answers `""`
   until the router replies. The check asks for that status first, once a second, and
@@ -91,12 +91,22 @@ precedence. `check` resolves to `checking`, then `open`, `closed` or `unknown`.
 - **Bind:** a local server listens on `127.0.0.1` only while the lobby is Private, and
   binds `0.0.0.0` within about 20 ms of the first non-private settings message. The 1 s
   debounce covers that.
+- **Rate limit:** ifconfig.co asks automated clients for no more than one request a
+  minute, and may answer 429 or drop requests beyond that. The session key
+  `lobbyportcheck_last_check` holds the port, the time of the last request and its
+  result, so it survives scene changes. `planCheck` decides what a check does: within 60 s
+  of the last request, a check for the same port shows the stored result and sends
+  nothing. With no stored result (the request was still running when the scene changed,
+  or its response was dropped as stale) or for another port, the check shows Checking
+  and sends when the 60 s are up. The time is taken when the request is sent, after any
+  UPnP wait. An `unknown` result is reused like any other, so a 429 does not cause more
+  requests.
 - **Re-check:** a result stays until the decision changes or the lobby scene loads again.
   Each load starts at `hidden` (above), so an open lobby checks again: in `new_game` after
-  Browse systems and back, and in `gw_play` on each return to the war map. A host who
-  fixes the router or firewall with the lobby open sets it to Private and back to
-  re-check, as the README says. Nothing holds these checks to ifconfig.co's limit of one
-  automated request per minute (#19).
+  Browse systems and back, and in `gw_play` on each return to the war map. Within a
+  minute of the last request that check reuses its result. A host who fixes the router
+  or firewall with the lobby open waits a minute, then sets it to Private and back to
+  re-check, as the README says.
 
 `interpretResponse` returns `open` or `closed` only for HTTP 200 with an object body whose
 `port` equals the port asked about and whose `reachable` is a boolean. Anything else,
@@ -194,7 +204,9 @@ shipped JS is ES5 plus the few later features Chrome 40 has.
 
 1. Multiplayer, Create Game (local): the lobby shows "Private: port not checked".
 2. Public: Checking, then Open, Closed or Unknown.
-3. Friends to Public sends no request. Public to Private to Public checks again.
+3. Friends to Public sends no request. Public to Private to Public within a minute of
+   the last request shows the stored result with no request; after a minute it checks
+   again.
 4. `server_local_host_transport` set to `STEAM`: "Steam networking: no open port needed".
 5. The service unreachable: Unknown.
 6. A joining client sees no indicator, including after a host transfer.
@@ -205,3 +217,6 @@ shipped JS is ES5 plus the few later features Chrome 40 has.
    Open to:, Checking, then Open, Closed or Unknown. Private, then Public, checks again.
 10. Galactic War with the `UPNP` transport: the check does not stay on Checking.
 11. A viewer who joins the co-op session sees no indicator.
+12. Browse systems and back within a minute of the last request: the stored result
+    shows with no request. A scene change while a request runs: the next check waits
+    until a minute after that request, then sends.

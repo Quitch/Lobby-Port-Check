@@ -24,6 +24,11 @@ so it checks straight away. Changing between Friends and Public does not
 check again. Only the host sees the indicator, and only for a server running on their own
 computer.
 
+ifconfig.co asks for no more than one check a minute, so within a minute of the last
+check the mod shows that result again instead of checking. If you change your router or
+firewall with the lobby open, wait a minute, then set the lobby to Private and back to
+check again.
+
 ## Privacy
 
 To check the port, the mod asks [ifconfig.co](https://ifconfig.co) to connect to your

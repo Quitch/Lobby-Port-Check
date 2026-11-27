@@ -138,6 +138,85 @@ describe("upnpPending", () => {
   });
 });
 
+describe("planCheck", () => {
+  const minute = core.RECHECK_INTERVAL;
+  const now = 1_000_000;
+  const last = { port: 20545, sentAt: now - 10_000, result: "closed" };
+
+  it("allows one request a minute", () => {
+    assert.equal(minute, 60_000);
+  });
+
+  it("sends when nothing was sent before", () => {
+    for (const stored of [undefined, null, "", 42, "x", {}, []]) {
+      assert.deepEqual(
+        core.planCheck(stored, 20545, now),
+        { action: "send" },
+        JSON.stringify(stored)
+      );
+    }
+  });
+
+  it("sends when the time of the last request is unusable", () => {
+    for (const sentAt of ["999990", null, NaN, Infinity, -Infinity]) {
+      assert.deepEqual(core.planCheck({ ...last, sentAt }, 20545, now), {
+        action: "send",
+      });
+    }
+  });
+
+  it("sends a minute or more after the last request", () => {
+    for (const sentAt of [now - minute, now - minute - 1, 0]) {
+      assert.deepEqual(core.planCheck({ ...last, sentAt }, 20545, now), {
+        action: "send",
+      });
+    }
+  });
+
+  it("sends when the last request is in the future", () => {
+    assert.deepEqual(core.planCheck({ ...last, sentAt: now + 1 }, 20545, now), {
+      action: "send",
+    });
+  });
+
+  it("reuses the last result for the same port inside a minute", () => {
+    for (const result of ["open", "closed", "unknown"]) {
+      assert.deepEqual(core.planCheck({ ...last, result }, 20545, now), {
+        action: "reuse",
+        result,
+      });
+    }
+    assert.deepEqual(
+      core.planCheck({ ...last, sentAt: now - minute + 1 }, 20545, now),
+      { action: "reuse", result: "closed" }
+    );
+    assert.deepEqual(core.planCheck({ ...last, sentAt: now }, 20545, now), {
+      action: "reuse",
+      result: "closed",
+    });
+  });
+
+  it("waits out the minute when there is no result to reuse", () => {
+    for (const result of [null, undefined, "checking", "private", "OPEN"]) {
+      assert.deepEqual(core.planCheck({ ...last, result }, 20545, now), {
+        action: "wait",
+        delay: 50_000,
+      });
+    }
+  });
+
+  it("waits out the minute for a different port", () => {
+    assert.deepEqual(core.planCheck(last, 20546, now), {
+      action: "wait",
+      delay: 50_000,
+    });
+    assert.deepEqual(core.planCheck({ ...last, port: "20545" }, 20545, now), {
+      action: "wait",
+      delay: 50_000,
+    });
+  });
+});
+
 describe("label", () => {
   const states = ["open", "closed", "unknown", "checking", "private", "steam"];
 
