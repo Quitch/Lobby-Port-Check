@@ -140,11 +140,43 @@ describe("interpretResponse", () => {
       { ...ok, port: "20545" },
       { ...ok, reachable: "true" },
       { ip: ok.ip, port: ok.port },
+      { ip: "2001:db8::1", port: 20546, reachable: false },
+      { ip: "2001:db8::1", port: 20545 },
     ]) {
       assert.equal(
         core.interpretResponse(20545, 200, body),
         "unknown",
         JSON.stringify(body)
+      );
+    }
+  });
+
+  it("does not report a result for an IPv6 address", () => {
+    for (const ip of ["2001:db8::1", "::1", "fe80::1%eth0"]) {
+      for (const reachable of [true, false]) {
+        assert.equal(
+          core.interpretResponse(20545, 200, { ip, port: 20545, reachable }),
+          "ipv6",
+          ip
+        );
+      }
+    }
+    assert.equal(
+      core.interpretResponse(
+        20545,
+        200,
+        JSON.stringify({ ip: "2001:db8::1", port: 20545, reachable: false })
+      ),
+      "ipv6"
+    );
+  });
+
+  it("reads the port when the address is missing or not a string", () => {
+    for (const ip of [undefined, null, 42, ["2001:db8::1"], { v6: true }]) {
+      assert.equal(
+        core.interpretResponse(20545, 200, { ...ok, ip }),
+        "open",
+        JSON.stringify(ip)
       );
     }
   });
@@ -212,7 +244,7 @@ describe("planCheck", () => {
   });
 
   it("reuses the last result for the same port inside a minute", () => {
-    for (const result of ["open", "closed", "unknown"]) {
+    for (const result of ["open", "closed", "unknown", "ipv6"]) {
       assert.deepEqual(core.planCheck({ ...last, result }, 20545, now), {
         action: "reuse",
         result,
@@ -250,7 +282,15 @@ describe("planCheck", () => {
 });
 
 describe("label", () => {
-  const states = ["open", "closed", "unknown", "checking", "private", "steam"];
+  const states = [
+    "open",
+    "closed",
+    "unknown",
+    "ipv6",
+    "checking",
+    "private",
+    "steam",
+  ];
 
   it("gives every visible state a glyph and translatable text", () => {
     for (const state of states) {
@@ -267,8 +307,12 @@ describe("label", () => {
     assert.equal(new Set(glyphs).size, glyphs.length);
   });
 
+  it("tells the IPv6 result apart from unknown by its words", () => {
+    assert.notEqual(core.label("ipv6").text, core.label("unknown").text);
+  });
+
   it("names the port in every check result", () => {
-    for (const state of ["open", "closed", "unknown", "checking"]) {
+    for (const state of ["open", "closed", "unknown", "ipv6", "checking"]) {
       assert.match(core.label(state).text, /__port__/, state);
     }
   });

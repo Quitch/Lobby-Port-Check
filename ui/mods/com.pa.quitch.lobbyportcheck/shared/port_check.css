@@ -42,6 +42,8 @@
 }
 
 .controls #lobby_port_check[data-state="unknown"],
-#gw-campaign-settings #lobby_port_check[data-state="unknown"] {
+#gw-campaign-settings #lobby_port_check[data-state="unknown"],
+.controls #lobby_port_check[data-state="ipv6"],
+#gw-campaign-settings #lobby_port_check[data-state="ipv6"] {
   color: #ffd54f;
 }
