@@ -1,5 +1,7 @@
 var lobbyPortCheckCore = (function () {
   var DEFAULT_PORT = 20545;
+  var RECHECK_INTERVAL = 60000;
+  var RESULTS = ["open", "closed", "unknown"];
 
   var LABELS = {
     open: { glyph: "✔", text: "!LOC:Port __port__ open" },
@@ -67,16 +69,39 @@ var lobbyPortCheckCore = (function () {
     return !success || status === "" || status === undefined || status === null;
   }
 
+  function planCheck(last, port, transport, now) {
+    if (!last || typeof last.sentAt !== "number") {
+      return { action: "send" };
+    }
+    var elapsed = now - last.sentAt;
+    if (elapsed < 0 && elapsed > -RECHECK_INTERVAL) {
+      elapsed = 0;
+    }
+    if (!(elapsed >= 0 && elapsed < RECHECK_INTERVAL)) {
+      return { action: "send" };
+    }
+    if (
+      last.port === port &&
+      last.transport === transport &&
+      RESULTS.indexOf(last.result) !== -1
+    ) {
+      return { action: "reuse", result: last.result };
+    }
+    return { action: "wait", delay: RECHECK_INTERVAL - elapsed };
+  }
+
   function label(state) {
     return LABELS[state];
   }
 
   return {
     DEFAULT_PORT: DEFAULT_PORT,
+    RECHECK_INTERVAL: RECHECK_INTERVAL,
     resolvePort: resolvePort,
     decideState: decideState,
     interpretResponse: interpretResponse,
     upnpPending: upnpPending,
+    planCheck: planCheck,
     label: label,
   };
 })();

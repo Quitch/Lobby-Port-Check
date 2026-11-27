@@ -3,6 +3,9 @@ function lobbyPortCheck(scene) {
   var localHost = ko
     .observable()
     .extend({ session: "lobbyportcheck_local_host" });
+  var lastCheck = ko
+    .observable()
+    .extend({ session: "lobbyportcheck_last_check" });
   var result = ko.observable("checking");
   var requestToken = 0;
 
@@ -33,13 +36,45 @@ function lobbyPortCheck(scene) {
     requestToken += 1;
     var token = requestToken;
     var checkedPort = port();
+    var checkedTransport = api.net.effectiveLocalHostTransport();
+    // ifconfig.co asks for no more than one automated request a minute.
+    var plan = core.planCheck(
+      lastCheck(),
+      checkedPort,
+      checkedTransport,
+      _.now()
+    );
+    if (plan.action === "reuse") {
+      result(plan.result);
+      return;
+    }
+    if (plan.action === "wait") {
+      _.delay(function () {
+        if (token === requestToken) {
+          runCheck();
+        }
+      }, plan.delay);
+      return;
+    }
     var upnpAttempts = 0;
+    var sentAt;
+    var record = function (outcome) {
+      lastCheck({
+        port: checkedPort,
+        transport: checkedTransport,
+        sentAt: sentAt,
+        result: outcome,
+      });
+    };
     var settle = function (outcome) {
       if (token === requestToken && settled() === "check") {
+        record(outcome);
         result(outcome);
       }
     };
     var send = function () {
+      sentAt = _.now();
+      record(null);
       $.ajax({
         url: "https://ifconfig.co/port/" + checkedPort,
         dataType: "json",
@@ -71,7 +106,7 @@ function lobbyPortCheck(scene) {
         send();
       });
     };
-    if (scene.awaitUpnp && api.net.effectiveLocalHostTransport() === "UPNP") {
+    if (scene.awaitUpnp && checkedTransport === "UPNP") {
       awaitUpnp();
     } else {
       send();

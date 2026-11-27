@@ -138,6 +138,117 @@ describe("upnpPending", () => {
   });
 });
 
+describe("planCheck", () => {
+  const minute = core.RECHECK_INTERVAL;
+  const now = 1_000_000;
+  const last = {
+    port: 20545,
+    transport: "UPNP",
+    sentAt: now - 10_000,
+    result: "closed",
+  };
+  const plan = (stored, overrides = {}) =>
+    core.planCheck(
+      stored,
+      overrides.port ?? 20545,
+      overrides.transport ?? "UPNP",
+      overrides.now ?? now
+    );
+
+  it("allows one request a minute", () => {
+    assert.equal(minute, 60_000);
+  });
+
+  it("sends when nothing was sent before", () => {
+    for (const stored of [undefined, null, "", 42, "x", {}, []]) {
+      assert.deepEqual(
+        plan(stored),
+        { action: "send" },
+        JSON.stringify(stored)
+      );
+    }
+  });
+
+  it("sends when the time of the last request is unusable", () => {
+    for (const sentAt of ["999990", null, NaN, Infinity, -Infinity]) {
+      assert.deepEqual(plan({ ...last, sentAt }), { action: "send" });
+    }
+  });
+
+  it("sends a minute or more after the last request", () => {
+    for (const sentAt of [now - minute, now - minute - 1, 0]) {
+      assert.deepEqual(plan({ ...last, sentAt }), { action: "send" });
+    }
+  });
+
+  it("treats a request less than a minute in the future as just sent", () => {
+    for (const sentAt of [now + 1, now + minute - 1]) {
+      assert.deepEqual(plan({ ...last, sentAt }), {
+        action: "reuse",
+        result: "closed",
+      });
+      assert.deepEqual(plan({ ...last, sentAt, result: null }), {
+        action: "wait",
+        delay: minute,
+      });
+    }
+  });
+
+  it("sends when the last request is a minute or more in the future", () => {
+    for (const sentAt of [now + minute, now + 10 * minute]) {
+      assert.deepEqual(plan({ ...last, sentAt }), { action: "send" });
+    }
+  });
+
+  it("reuses the last result for the same port and transport inside a minute", () => {
+    for (const result of ["open", "closed", "unknown"]) {
+      assert.deepEqual(plan({ ...last, result }), {
+        action: "reuse",
+        result,
+      });
+    }
+    assert.deepEqual(plan({ ...last, sentAt: now - minute + 1 }), {
+      action: "reuse",
+      result: "closed",
+    });
+    assert.deepEqual(plan({ ...last, sentAt: now }), {
+      action: "reuse",
+      result: "closed",
+    });
+  });
+
+  it("waits out the minute when there is no result to reuse", () => {
+    for (const result of [null, undefined, "checking", "private", "OPEN"]) {
+      assert.deepEqual(plan({ ...last, result }), {
+        action: "wait",
+        delay: 50_000,
+      });
+    }
+  });
+
+  it("waits out the minute for a different port", () => {
+    assert.deepEqual(plan(last, { port: 20546 }), {
+      action: "wait",
+      delay: 50_000,
+    });
+    assert.deepEqual(plan({ ...last, port: "20545" }), {
+      action: "wait",
+      delay: 50_000,
+    });
+  });
+
+  it("waits out the minute for a different transport", () => {
+    for (const transport of ["TCP", "STEAM"]) {
+      assert.deepEqual(plan(last, { transport }), {
+        action: "wait",
+        delay: 50_000,
+      });
+    }
+    const noTransport = { port: 20545, sentAt: now - 10_000, result: "closed" };
+    assert.deepEqual(plan(noTransport), { action: "wait", delay: 50_000 });
+  });
+});
+
 describe("label", () => {
   const states = ["open", "closed", "unknown", "checking", "private", "steam"];
 
